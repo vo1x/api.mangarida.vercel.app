@@ -1,10 +1,37 @@
 const axios = require("axios");
+const cheerio = require("cheerio");
 
+exports.getSearch = async (req, res) => {
+  const { query } = req.query;
+  const url = `https://mangafire.to/filter?keyword=${query}`;
+  const { data } = await axios.get(url);
+  const $ = cheerio.load(data);
 
+  const unitDivs = $(".unit");
+  let results = [];
+  if (unitDivs.length > 0) {
+    unitDivs.each((index, unit) => {
+      const posterUrl = $(unit).find("img").attr("src");
+      const type = $(unit).find("span.type").text().trim();
+      const name = $(unit).find("div.info").find("a").text().trim();
+      const slug = $(unit).find("a.poster").attr("href").split("/")[2];
 
+      const result = {
+        name: name,
+        type: type,
+        posterUrl: posterUrl,
+        slug: slug,
+      };
+      results.push(result);
+    });
+  }
 
-
-
+  try {
+    res.status(200).json({ results: results });
+  } catch (error) {
+    res.status(400).json({ error: "Error", error });
+  }
+};
 
 exports.getRoot = async (req, res) => {
   try {
