@@ -6,5 +6,6 @@ const { getRoot, getSearch } = mediaController;
 
 router.get("/", getRoot);
 router.get("/search", getSearch);
+router.get("/chapters/:slug", mediaController.getChapters);
 
 module.exports = router;

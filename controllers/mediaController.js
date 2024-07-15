@@ -39,6 +39,34 @@ exports.getSearch = async (req, res) => {
   }
 };
 
+exports.getChapters = async (req, res) => {
+  const { slug } = req.params;
+  const url = `${baseUrl}/manga/${slug}`;
+  try {
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+
+    const chList = $(".list-body ul li");
+    let chapters = [];
+
+    chList.each((index, element) => {
+      const chTitle = $(element).find("a span").first().text().trim();
+      const chPublished = $(element).find("a span").eq(1).text().trim();
+      const chData = {
+        url: $(element).find("a").attr("href"),
+        title: chTitle,
+        publishedOn: chPublished,
+        chNum: $(element).attr("data-number"),
+      };
+      chapters.push(chData);
+    });
+
+    res.status(200).json({ chapters: chapters });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 exports.getRoot = async (req, res) => {
   try {
     res.status(200).json({ message: "API is up" });
