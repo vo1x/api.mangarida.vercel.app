@@ -6,7 +6,10 @@ const app = express();
 
 const imageProxy = require("../middlewares/imageProxy");
 
-const allowedOrigins = ["http://localhost:5173"];
+const allowedOrigins = [
+  "https://mangarida.vercel.app",
+  "http://localhost:5173",
+];
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -18,6 +21,8 @@ const corsOptions = {
   },
   optionsSuccessStatus: 200,
 };
+
+app.use(cors(corsOptions));
 
 const apiRoutes = require("../routes/api");
 app.use(express.json());
