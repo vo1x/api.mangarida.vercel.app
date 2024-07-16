@@ -1,6 +1,6 @@
 const axios = require("axios");
 const cheerio = require("cheerio");
-
+const fs = require("fs");
 const baseUrl = "https://mangafire.to";
 const imgDomain = "http://localhost:5000";
 
@@ -94,7 +94,7 @@ exports.getMetadata = async (req, res) => {
         imgDomain + "/image"
       ),
     };
-    
+
     const tagDivs = $(".meta div")
       .map((index, element) => $(element).text().trim())
       .get();
@@ -137,6 +137,45 @@ exports.getMetadata = async (req, res) => {
   } catch (error) {
     console.error("Error fetching manga details:", error);
     res.status(400).json({ error: "Error fetching manga details" });
+  }
+};
+
+exports.getPages = async (req, res) => {
+  const { slug, chapter } = req.params;
+  const chapterNum = chapter.split("-")[1];
+  const url = `${baseUrl}/ajax/read/${slug.split(".")[1]}/chapter/en`;
+
+  try {
+    const { data } = await axios.get(url, {
+      headers: {
+        "user-agent": "Android",
+      },
+    });
+
+    const idMatch = data.result.html.match(
+      new RegExp(`data-number=.*?${chapterNum}.*?data-id=.*?(\\d+)`)
+    );
+
+    if (!idMatch) {
+      return res.status(404).json({ error: "Chapter ID not found" });
+    }
+
+    const chapterId = idMatch[1];
+    const dataUrl = `${baseUrl}/ajax/read/chapter/${chapterId}`;
+    const response = await axios.get(dataUrl);
+    const images = response.data.result.images;
+    const pages = images.map((image, index) => ({
+      pgNum: index + 1,
+      url: image[0],
+    }));
+
+    res.status(200).json(pages);
+  } catch (error) {
+    console.error(
+      `Error fetching manga chapter pages for slug ${slug}:`,
+      error
+    );
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
