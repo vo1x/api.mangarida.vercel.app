@@ -169,13 +169,62 @@ exports.getPages = async (req, res) => {
       url: image[0],
     }));
 
-    res.status(200).json(pages);
+    res.status(200).json({ pages });
   } catch (error) {
     console.error(
       `Error fetching manga chapter pages for slug ${slug}:`,
       error
     );
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.getTrending = async (req, res) => {
+  const url = `${baseUrl}/home`;
+  try {
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+
+    const swiperSlides = $(".swiper-slide").get().slice(0, 10);
+
+    let results = [];
+
+    swiperSlides.forEach((slide) => {
+      let result = {};
+      const infoDiv = $(slide).find(".info");
+      const nameA = $(infoDiv).find("a.unit");
+      const name = $(nameA).text().trim();
+      const link = $(nameA).attr("href");
+      const posterUrl = $(slide).find("a.poster img").attr("src");
+      const description = $(slide).find(".below span").text().trim();
+      const chapterDiv = $(slide).find(".below p");
+      const latestChapter = {
+        chNum: parseInt(chapterDiv.text().split("-")[0].trim().split(" ")[1]),
+        volume: parseInt(chapterDiv.text().split("-")[1].trim().split(" ")[1]),
+      };
+      const genres = $(slide)
+        .find(".below a")
+        .map((element) => $(element).text().trim())
+        .get();
+      const status = $(slide).find(".above span").text().trim();
+      result = {
+        name: name,
+        slug: link.split("/")[2],
+        posterUrl: posterUrl.replace(
+          "https://static.mangafire.to",
+          imgDomain + "/image"
+        ),
+        description: description,
+        latestChapter: latestChapter,
+        genres: genres,
+        status: status,
+      };
+      results.push(result);
+    });
+
+    res.status(200).json({ results });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
   }
 };
 
