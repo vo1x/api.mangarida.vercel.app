@@ -67,6 +67,79 @@ exports.getChapters = async (req, res) => {
   }
 };
 
+exports.getMetadata = async (req, res) => {
+  const { slug } = req.params;
+  const url = `${baseUrl}/manga/${slug}`;
+  try {
+    const { data } = await axios.get(url);
+    const $ = cheerio.load(data);
+    let mangaDetails = {};
+    const detailsDiv = $(".info");
+    const name = $(detailsDiv).find("h1").text().trim();
+    const altNames = $(detailsDiv).find("h6").text().trim().split("; ");
+    const status = $(detailsDiv).find("p").text().trim().toLowerCase();
+    const type = $(detailsDiv).find(".min-info a").text().trim().toLowerCase();
+
+    const description = $("#synopsis").text().trim();
+    const posterUrl = $(".poster img").attr("src");
+
+    mangaDetails = {
+      name: name,
+      altNames: altNames,
+      status: status,
+      type: type,
+      synopsis: description,
+      posterUrl: posterUrl.replace(
+        "https://static.mangafire.to",
+        imgDomain + "/image"
+      ),
+    };
+    
+    const tagDivs = $(".meta div")
+      .map((index, element) => $(element).text().trim())
+      .get();
+    tagDivs.forEach((tagDiv) => {
+      if (tagDiv.startsWith("Author:")) {
+        mangaDetails = {
+          ...mangaDetails,
+          author: tagDiv
+            .substring("Author:".length)
+            .split(",")
+            .map((tag) => tag.trim()),
+        };
+      }
+      if (tagDiv.startsWith("Published:")) {
+        mangaDetails = {
+          ...mangaDetails,
+          publishedOn: tagDiv.substring("Published:".length).trim(),
+        };
+      }
+      if (tagDiv.startsWith("Genres:")) {
+        mangaDetails = {
+          ...mangaDetails,
+          genres: tagDiv
+            .substring("Genres:".length)
+            .split(",")
+            .map((tag) => tag.trim()),
+        };
+      }
+      if (tagDiv.startsWith("Mangazines:")) {
+        mangaDetails = {
+          ...mangaDetails,
+          mangazines: tagDiv
+            .substring("Mangazines:".length)
+            .split(",")
+            .map((tag) => tag.trim()),
+        };
+      }
+    });
+    res.status(200).json(mangaDetails);
+  } catch (error) {
+    console.error("Error fetching manga details:", error);
+    res.status(400).json({ error: "Error fetching manga details" });
+  }
+};
+
 exports.getRoot = async (req, res) => {
   try {
     res.status(200).json({ message: "API is up" });
