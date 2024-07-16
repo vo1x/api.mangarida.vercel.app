@@ -204,7 +204,7 @@ exports.getTrending = async (req, res) => {
       };
       const genres = $(slide)
         .find(".below a")
-        .map((element) => $(element).text().trim())
+        .map((index, element) => $(element).text().trim())
         .get();
       const status = $(slide).find(".above span").text().trim();
       result = {
