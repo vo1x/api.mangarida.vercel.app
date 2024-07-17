@@ -1,47 +1,17 @@
 import axios from "axios";
 import cheerio from "cheerio";
-import { RequestHandler } from "express";
+
+import {
+  MediaController,
+  SearchResult,
+  ChapterResult,
+  TrendingResult,
+} from "../interfaces/interfaces";
 
 type CheerioElement = cheerio.Element;
 
-interface MediaController {
-  getRoot: RequestHandler;
-  getSearch: RequestHandler;
-  getChapters: RequestHandler<{ slug: string }>;
-  getMetadata: RequestHandler<{ slug: string }>;
-  getPages: RequestHandler<{ slug: string; chapter: string }>;
-  getTrending: RequestHandler;
-}
-
 const baseUrl = "https://mangafire.to";
 const imgDomain = "http://localhost:5000";
-
-interface SearchResult {
-  name: string;
-  type: string;
-  posterUrl: string;
-  slug: string;
-}
-
-interface ChapterResult {
-  url: string;
-  title: string;
-  publishedOn: string;
-  chNum: number;
-}
-interface LatestChapter {
-  chNum: number;
-  volume: number;
-}
-interface TrendingResult {
-  name: string;
-  slug: string;
-  posterUrl: string;
-  description: string;
-  latestChapter: LatestChapter;
-  genres: string[];
-  status: string;
-}
 
 const mediaController: MediaController = {
   async getRoot(req, res) {
