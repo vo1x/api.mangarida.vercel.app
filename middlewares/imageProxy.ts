@@ -1,4 +1,4 @@
-const { createProxyMiddleware } = require("http-proxy-middleware");
+import { createProxyMiddleware } from "http-proxy-middleware";
 
 const baseUrl = "https://static.mangafire.to";
 
@@ -7,4 +7,4 @@ const imageProxy = createProxyMiddleware({
   changeOrigin: true,
 });
 
-module.exports = imageProxy;
+export default imageProxy;

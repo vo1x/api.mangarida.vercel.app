@@ -1,8 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const mediaController = require("../controllers/mediaController");
+import express from "express";
+import mediaController from "../controllers/mediaController";
 
-const { getRoot, getSearch, getChapters, getMetadata,getTrending, getPages } =
+const router = express.Router();
+
+const { getRoot, getSearch, getChapters, getMetadata, getTrending, getPages } =
   mediaController;
 
 router.get("/", getRoot);
@@ -12,4 +13,4 @@ router.get("/manga/:slug", getMetadata);
 router.get("/read/:slug/:chapter", getPages);
 router.get("/trending", getTrending);
 
-module.exports = router;
+export default router;
