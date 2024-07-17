@@ -6,6 +6,7 @@ import {
   SearchResult,
   ChapterResult,
   TrendingResult,
+  NewReleasesResult,
 } from "../interfaces/interfaces";
 
 type CheerioElement = cheerio.Element;
@@ -167,7 +168,6 @@ const mediaController: MediaController = {
 
       res.status(200).json(mangaDetails);
     } catch (error: any) {
-      console.error("Error fetching manga details:", error);
       res.status(400).json({ error: "Error fetching manga details" });
     }
   },
@@ -253,6 +253,45 @@ const mediaController: MediaController = {
           status: status,
         };
         results.push(result);
+      });
+
+      res.status(200).json({ results });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  },
+
+  async getNewReleases(req, res) {
+    const url = `${baseUrl}/home`;
+    try {
+      const { data } = await axios.get(url);
+      const $ = cheerio.load(data);
+
+      const sectionDivs = $("section").filter(
+        (index, section) =>
+          $(section).find(".head h2").text().trim().toLowerCase() ===
+          "new release"
+      );
+
+      let results: NewReleasesResult[] = [];
+
+      sectionDivs.each((index, section) => {
+        $(section)
+          .find(".swiper-slide.unit")
+          .each((index, unit) => {
+            const name = $(unit).find("span").text().trim();
+            const posterUrl = $(unit).find("img").attr("src") || "";
+            const slug = $(unit).find("a").attr("href")?.split("/")[2] || "";
+            const result: NewReleasesResult = {
+              name: name,
+              posterUrl: posterUrl.replace(
+                "https://static.mangafire.to",
+                imgDomain + "/image"
+              ),
+              slug: slug,
+            };
+            results.push(result);
+          });
       });
 
       res.status(200).json({ results });
