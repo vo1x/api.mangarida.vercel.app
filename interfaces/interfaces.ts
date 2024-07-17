@@ -10,18 +10,17 @@ export interface MediaController {
   getNewReleases: RequestHandler;
 }
 
-export interface SearchResult {
+interface BaseResult {
   name: string;
-  type: string;
   posterUrl: string;
   slug: string;
 }
 
-export interface NewReleasesResult {
-  name: string;
-  posterUrl: string;
-  slug: string;
+export interface SearchResult extends BaseResult {
+  type: string;
 }
+
+export interface NewReleasesResult extends BaseResult {}
 
 export interface ChapterResult {
   url: string;
@@ -35,10 +34,7 @@ interface LatestChapter {
   volume: number;
 }
 
-export interface TrendingResult {
-  name: string;
-  slug: string;
-  posterUrl: string;
+export interface TrendingResult extends BaseResult {
   description: string;
   latestChapter: LatestChapter;
   genres: string[];
