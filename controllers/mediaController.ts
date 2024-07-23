@@ -12,7 +12,7 @@ import {
 type CheerioElement = cheerio.Element;
 
 const baseUrl = "https://mangafire.to";
-const imgDomain = "http://localhost:5000";
+const imgDomain = "http://192.168.1.73:5000";
 
 const mediaController: MediaController = {
   async getRoot(req, res) {

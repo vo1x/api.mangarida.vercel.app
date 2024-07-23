@@ -9,6 +9,7 @@ const app = express();
 const allowedOrigins: string[] = [
   "https://mangarida.vercel.app",
   "http://localhost:5173",
+  "exp://192.168.1.103:8081",
 ];
 
 const corsOptions: CorsOptions = {
@@ -26,7 +27,7 @@ const corsOptions: CorsOptions = {
   optionsSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 app.use(express.json());
 
