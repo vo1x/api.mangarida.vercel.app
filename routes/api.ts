@@ -1,24 +1,15 @@
 import express from "express";
 import mediaController from "../controllers/mediaController";
-
+import comicKController from "../controllers/comicKController";
 const router = express.Router();
-
-const {
-  getRoot,
-  getSearch,
-  getChapters,
-  getMetadata,
-  getTrending,
-  getPages,
-  getNewReleases,
-} = mediaController;
+import limiter from "../middleware/rateLimit";
+const { getRoot, getSearch, getChapters, getMetadata, getPages } =
+  comicKController;
 
 router.get("/", getRoot);
 router.get("/search", getSearch);
-router.get("/chapters/:slug", getChapters);
-router.get("/manga/:slug", getMetadata);
-router.get("/read/:slug/:chapter", getPages);
-router.get("/trending", getTrending);
-router.get("/new", getNewReleases);
+router.get("/chapters/:mangaID", getChapters);
+router.get("/manga/:mangaID", limiter, getMetadata);
+router.get("/read/:chapterID", limiter, getPages);
 
 export default router;

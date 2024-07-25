@@ -1,6 +1,6 @@
 import { createProxyMiddleware } from "http-proxy-middleware";
 
-const baseUrl = "https://static.mangafire.to";
+const baseUrl = "https://meo.comick.pictures";
 
 const imageProxy = createProxyMiddleware({
   target: baseUrl,

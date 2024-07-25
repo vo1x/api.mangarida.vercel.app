@@ -28,13 +28,13 @@ const corsOptions: CorsOptions = {
 };
 
 // app.use(cors(corsOptions));
-
 app.use(express.json());
 
 app.use("/", router);
 app.use("/image", imageProxy);
 
 const PORT = 5000;
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
