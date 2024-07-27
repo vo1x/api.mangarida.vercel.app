@@ -33,10 +33,34 @@ const agent = new https.Agent({
 const api = axios.create({
   httpsAgent: agent,
   headers: {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0",
+    "User-Agent": "Android",
   },
 });
+
+const dateToHumanReadableForm = (timestamp: string): string => {
+  const date = new Date(timestamp);
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const year = date.getUTCFullYear();
+  const month = monthNames[date.getUTCMonth()];
+  const day = date.getUTCDate();
+
+  return `${month} ${day}, ${year}`;
+};
 
 const comicKController: ComicKController = {
   async getRoot(req, res) {
@@ -56,6 +80,7 @@ const comicKController: ComicKController = {
     const results: any = [];
     try {
       const { data } = await api.get(url);
+      console.log(data);
       data.forEach((resultObj: any) => {
         const result = {
           source: "comick",
@@ -80,28 +105,42 @@ const comicKController: ComicKController = {
 
   async getChapters(req, res) {
     const { mangaID } = req.params;
-    const { page } = req.query;
-    const url = `${baseUrl}/comic/${mangaID}/chapters?lang=en&page=${page}&tachiyomi=true`;
-
+    let page = 1;
     const chapters: ChapterResult[] = [];
+
     try {
       console.log("get chapters called");
-      const { data } = await api.get(url);
-      data.chapters.forEach((chapter: any) => {
-        let chapterInfo: ChapterResult = {
-          chId: chapter.hid,
-          chNum: chapter.chap,
-          title: chapter.title,
-          volume: chapter.vol,
-          language: chapter.lang,
-          createdAt: chapter.created_at,
-          isLastCh: chapter.is_the_last_chapter,
-          groupName: chapter.group_name,
-        };
-        chapters.push(chapterInfo);
-      });
+
+      while (true) {
+        const url = `${baseUrl}/comic/${mangaID}/chapters?lang=en&page=${page}&tachiyomi=true`;
+        console.log(`Fetching URL: ${url}`);
+        const { data } = await api.get(url);
+
+        if (!data.chapters || data.chapters.length === 0) {
+          console.log("No more chapters to fetch");
+          break;
+        }
+
+        data.chapters.forEach((chapter: any) => {
+          let chapterInfo: ChapterResult = {
+            chId: chapter.hid,
+            chNum: chapter.chap,
+            title: chapter.title,
+            volume: chapter.vol,
+            language: chapter.lang,
+            createdAt: dateToHumanReadableForm(chapter.created_at),
+            isLastCh: chapter.is_the_last_chapter,
+            groupName: chapter.group_name,
+          };
+          chapters.push(chapterInfo);
+        });
+
+        page += 1;
+      }
+
       res.status(200).json({ chapters });
     } catch (error: any) {
+      console.error("Error fetching chapters:", error.message);
       res.status(400).json({ error: error.message });
     }
   },
