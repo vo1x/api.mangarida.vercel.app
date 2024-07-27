@@ -2,11 +2,11 @@
   "name": "api.mangarida.vercel.app",
   "version": "1.0.0",
   "description": "",
-  "main": "api/server.js",
+  "main": "api/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "node api/server.js",
+    "start": "node api/server.ts",
     "dev": "nodemon api/server.ts"
   },
   "author": "volx",
@@ -14,18 +14,17 @@
   "dependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/node": "^20.14.11",
+    "@types/node": "^20.14.12",
     "axios": "^1.7.2",
     "cheerio": "^1.0.0-rc.12",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
     "http-proxy-middleware": "^3.0.0",
     "nodemon": "^3.1.4",
-    "puppeteer": "^22.13.0",
+    "puppeteer": "^22.14.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.4"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35"
