@@ -107,6 +107,7 @@ const comicKController: ComicKController = {
     const { mangaID } = req.params;
     let page = 1;
     const chapters: ChapterResult[] = [];
+    const groupNames: string[] = [];
 
     try {
       console.log("get chapters called");
@@ -122,6 +123,22 @@ const comicKController: ComicKController = {
         }
 
         data.chapters.forEach((chapter: any) => {
+          console.log(chapter.group_name);
+          if (
+            Array.isArray(chapter.group_name) &&
+            chapter.group_name.length > 0
+          ) {
+            const groupNameToAdd = chapter.group_name
+              .pop()
+              .toLowerCase()
+              .trim();
+
+            if (!groupNames.includes(groupNameToAdd)) {
+              groupNames.push(groupNameToAdd);
+            }
+          } else {
+            console.error("chapter.group_name is not defined or not an array");
+          }
           let chapterInfo: ChapterResult = {
             chId: chapter.hid,
             chNum: chapter.chap,
@@ -138,7 +155,7 @@ const comicKController: ComicKController = {
         page += 1;
       }
 
-      res.status(200).json({ chapters });
+      res.status(200).json({ chapters: chapters, groups: groupNames });
     } catch (error: any) {
       console.error("Error fetching chapters:", error.message);
       res.status(400).json({ error: error.message });
