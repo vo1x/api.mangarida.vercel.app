@@ -1,0 +1,5 @@
+{
+  "watch": ["api.mangarida.vercel.app/**/*.ts"],
+  "ext": "ts",
+  "exec": "ts-node api/server.ts"
+}

@@ -1,2 +1,14 @@
-node_modules
+# Node modules directory
+node_modules/
+
+# Bun lock file
 bun.lockb
+
+# TypeScript build output
+dist/
+
+# Logs
+*.log
+
+# Environment variables
+.env

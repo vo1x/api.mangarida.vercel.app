@@ -5,9 +5,9 @@
   "main": "api/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "start": "node api/server.ts",
-    "dev": "nodemon api/server.ts"
+    "build": "bun run tsc",
+    "start": "bun run api/server.ts",
+    "dev": "nodemon"
   },
   "author": "volx",
   "license": "ISC",
@@ -21,12 +21,11 @@
     "express": "^4.19.2",
     "express-rate-limit": "^7.4.0",
     "http-proxy-middleware": "^3.0.0",
-    "nodemon": "^3.1.4",
-    "puppeteer": "^22.14.0",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.5.4"
+    "nodemon": "^3.1.4"
   },
   "devDependencies": {
-    "@types/cheerio": "^0.22.35"
+    "@types/cheerio": "^0.22.35",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
   }
 }
