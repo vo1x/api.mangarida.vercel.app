@@ -1,7 +1,7 @@
 import express from "express";
 import cors, { CorsOptions } from "cors";
 
-import imageProxy from "../middlewares/imageProxy";
+import imageProxy from "../middleware/imageProxy";
 import router from "../routes/api";
 
 const app = express();

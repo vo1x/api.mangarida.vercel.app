@@ -22,7 +22,7 @@ interface ChapterResult {
 }
 
 const baseUrl = "https://api.comick.fun";
-const imgDomain = "http:localhost:5000";
+const imgDomain = "http:192.168.1.80:5000";
 
 const agent = new https.Agent({
   keepAlive: true,
@@ -57,7 +57,7 @@ const comicKController: ComicKController = {
     try {
       const { data } = await api.get(url);
       data.forEach((resultObj: any) => {
-        let result = {
+        const result = {
           source: "comick",
           mangaID: resultObj.hid,
           slug: resultObj.slug,
@@ -71,6 +71,7 @@ const comicKController: ComicKController = {
         };
         results.push(result);
       });
+      console.log("search api called");
       res.status(200).json({ results });
     } catch (error: any) {
       res.status(400).json({ message: error.message });
@@ -84,8 +85,8 @@ const comicKController: ComicKController = {
 
     const chapters: ChapterResult[] = [];
     try {
+      console.log("get chapters called");
       const { data } = await api.get(url);
-      console.log(data);
       data.chapters.forEach((chapter: any) => {
         let chapterInfo: ChapterResult = {
           chId: chapter.hid,
@@ -111,7 +112,7 @@ const comicKController: ComicKController = {
     console.log(url);
     try {
       const { data } = await api.get(url);
-      console.log(data);
+      console.log("manga metadata api called");
       const mangaDetails: any = {
         source: "comick",
         mangaID: data.comic.hid,
@@ -127,7 +128,8 @@ const comicKController: ComicKController = {
         },
         authors: data.authors.map((author: { name: string }) => author.name),
       };
-      res.status(200).json({ mangaDetails });
+
+      res.status(200).json(mangaDetails);
     } catch (error: any) {
       res.status(400).json({ error: error.message });
     }
@@ -139,6 +141,8 @@ const comicKController: ComicKController = {
 
     try {
       const { data } = await api.get(url);
+      console.log("get pages called");
+
       const pages = data.map(
         (
           image: {
