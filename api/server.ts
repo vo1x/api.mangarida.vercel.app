@@ -3,6 +3,7 @@ import cors, { CorsOptions } from "cors";
 
 import imageProxy from "../middleware/imageProxy";
 import router from "../routes/api";
+import { errorHandler } from "../middleware/errorHandler";
 
 const app = express();
 
@@ -29,6 +30,7 @@ const corsOptions: CorsOptions = {
 
 // app.use(cors(corsOptions));
 app.use(express.json());
+app.use(errorHandler);
 
 app.use("/", router);
 app.use("/image", imageProxy);

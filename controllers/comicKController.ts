@@ -36,29 +36,19 @@ const api = axios.create({
   headers: { "User-Agent": "Android" },
 });
 
-const dateToHumanReadableForm = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return `${
-    monthNames[date.getUTCMonth()]
-  } ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
+const countryTypeMap: { [key: string]: string } = {
+  kr: "manhwa",
+  jp: "manga",
+  cn: "manhua",
 };
 
-const handleError = (res: any, message: string, statusCode: number = 400) => {
-  res.status(statusCode).json({ message });
+const dateToHumanReadableForm = (timestamp: string): string => {
+  const date = new Date(timestamp);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
 
 const fetchData = async (url: string) => {
@@ -66,19 +56,55 @@ const fetchData = async (url: string) => {
   return data;
 };
 
+const decodeHtmlEntities = (htmlString: string): string => {
+  return htmlString
+    .replace(/&#(\d+);/g, (match, dec) => {
+      return String.fromCharCode(dec);
+    })
+    .replace(/&([a-zA-Z]+);/g, (match, entity) => {
+      const entities: { [key: string]: string } = {
+        amp: "&",
+        lt: "<",
+        gt: ">",
+        quot: '"',
+        apos: "'",
+        nbsp: " ",
+      };
+      return entities[entity] || match;
+    });
+};
+
+const stripHtmlTags = (htmlString: string): string => {
+  return htmlString
+    .replace(/<[^>]*>/g, "")
+    .replace(/\n+/g, " ")
+    .replace(/\\"/g, "")
+    .replace(/\\u003C/g, "<")
+    .replace(/\\u003E/g, ">")
+    .replace(
+      /Links:.*?AnimeNewsNetwork \(special\).*?AnimeNewsNetwork \(anime\)/g,
+      ""
+    );
+};
+
+const getRawTextFromHtml = (htmlString: string): string => {
+  const unescaped = decodeHtmlEntities(htmlString);
+  return stripHtmlTags(unescaped).trim();
+};
+
 const comicKController: ComicKController = {
-  async getRoot(req, res) {
+  async getRoot(req, res, next) {
     try {
       res.status(200).json({ message: "API is up" });
     } catch (error) {
-      handleError(res, "Failed to fetch API status");
+      next(error);
     }
   },
 
-  async getSearch(req, res) {
+  async getSearch(req, res, next) {
     const { query } = req.query;
     if (!query) {
-      return handleError(res, "Query parameter is required");
+      return next({ message: "Query parameter is required", statusCode: 400 });
     }
     const url = `${config.baseUrl}/v1.0/search?q=${query}&tachiyomi=true`;
     try {
@@ -88,14 +114,7 @@ const comicKController: ComicKController = {
         mangaID: resultObj.hid,
         slug: resultObj.slug,
         title: resultObj.title,
-        type:
-          resultObj.country === "kr"
-            ? "manhwa"
-            : resultObj.country === "jp"
-            ? "manga"
-            : resultObj.country === "cn"
-            ? "manhua"
-            : "Unknown",
+        type: countryTypeMap[resultObj.country] || "Unknown",
         contentRating: resultObj.content_rating,
         cover: {
           width: resultObj.md_covers[0].w,
@@ -105,22 +124,20 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ results });
     } catch (error) {
-      handleError(res, "Error fetching search results");
+      next(error);
     }
   },
 
-  async getChapters(req, res) {
+  async getChapters(req, res, next) {
     const { mangaID } = req.params;
-    let page = 1;
     const chapters: ChapterResult[] = [];
     const groupNames: Set<string> = new Set();
 
     try {
-      while (true) {
-        const url = `${config.baseUrl}/comic/${mangaID}/chapters?lang=en&page=${page}&tachiyomi=true`;
-        const data = await fetchData(url);
-        if (!data.chapters || data.chapters.length === 0) break;
+      const url = `${config.baseUrl}/comic/${mangaID}/chapters?lang=en&limit=99999&tachiyomi=true`;
+      const data = await fetchData(url);
 
+      if (data.chapters && data.chapters.length > 0) {
         data.chapters.forEach((chapter: any) => {
           const groupNameToAdd = chapter.group_name
             ?.pop()
@@ -138,49 +155,40 @@ const comicKController: ComicKController = {
             groupName: groupNameToAdd,
           });
         });
-        page += 1;
       }
+
       res.status(200).json({ chapters, groups: Array.from(groupNames) });
     } catch (error) {
-      handleError(res, "Error fetching chapters");
+      next(error);
     }
   },
 
-  async getMetadata(req, res) {
+  async getMetadata(req, res, next) {
     const { mangaID } = req.params;
     const url = `${config.baseUrl}/comic/${mangaID}?tachiyomi=true`;
     try {
       const data = await fetchData(url);
       const mangaDetails = {
-        source: "comick",
         mangaID: data.comic.hid,
         slug: data.comic.slug,
         title: data.comic.title,
-        type:
-          data.comic.country === "kr"
-            ? "manhwa"
-            : data.comic.country === "jp"
-            ? "manga"
-            : data.comic.country === "cn"
-            ? "manhua"
+        type: countryTypeMap[data.comic.country] || "Unknown",
+        status:
+          data.comic.status === 1
+            ? "Ongoing"
+            : data.comic.status === 2
+            ? "Completed"
             : "Unknown",
-        status: data.comic.status,
         lastChapter: data.comic.last_chapter,
-        synopsis: data.comic.desc,
-        cover: {
-          width: data.comic.md_covers[0].w,
-          height: data.comic.md_covers[0].h,
-          url: `${config.imgDomain}/image/${data.comic.md_covers[0].b2key}`,
-        },
-        authors: data.authors.map((author: any) => author.name),
+        synopsis: getRawTextFromHtml(data.comic.parsed),
+        cover: data.comic.cover,
       };
       res.status(200).json(mangaDetails);
     } catch (error) {
-      handleError(res, "Error fetching metadata");
+      next(error);
     }
   },
-
-  async getPages(req, res) {
+  async getPages(req, res, next) {
     const { chapterID } = req.params;
     const url = `${config.baseUrl}/chapter/${chapterID}/get_images?tachiyomi=true`;
     try {
@@ -194,7 +202,7 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ pages });
     } catch (error) {
-      handleError(res, "Internal Server Error", 500);
+      next(error);
     }
   },
 };
