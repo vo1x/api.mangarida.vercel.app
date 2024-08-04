@@ -4,7 +4,7 @@ A REST API written in Express.js, that scrapes data off of [Mangafire](https://m
 
 The scraped data includes:
 
-- Search Results (Only the results from the first page are scraped as of now.)
+- Search Results (Only the results from the first page are scraped as of now for Mangafire.)
 - Manga Details
 - Chapter list
 - Pages(images) for each chapter
