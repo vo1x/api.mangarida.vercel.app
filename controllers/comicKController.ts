@@ -12,7 +12,7 @@ interface ComicKController {
 
 interface ChapterResult {
   chId: string;
-  chNum: string;
+  chNum: number;
   title: string;
   volume: string;
   language: string;
@@ -57,28 +57,45 @@ const dateToHumanReadableForm = (timestamp: string): string => {
   } ${date.getUTCDate()}, ${date.getUTCFullYear()}`;
 };
 
+const handleError = (res: any, message: string, statusCode: number = 400) => {
+  res.status(statusCode).json({ message });
+};
+
+const fetchData = async (url: string) => {
+  const { data } = await api.get(url);
+  return data;
+};
+
 const comicKController: ComicKController = {
   async getRoot(req, res) {
     try {
       res.status(200).json({ message: "API is up" });
     } catch (error) {
-      res.status(400).json({ message: "Failed to fetch API status" });
+      handleError(res, "Failed to fetch API status");
     }
   },
 
   async getSearch(req, res) {
     const { query } = req.query;
     if (!query) {
-      return res.status(400).json({ message: "Query parameter is required" });
+      return handleError(res, "Query parameter is required");
     }
     const url = `${config.baseUrl}/v1.0/search?q=${query}&tachiyomi=true`;
     try {
-      const { data } = await api.get(url);
+      const data = await fetchData(url);
       const results = data.map((resultObj: any) => ({
         source: "comick",
         mangaID: resultObj.hid,
         slug: resultObj.slug,
         title: resultObj.title,
+        type:
+          resultObj.country === "kr"
+            ? "manhwa"
+            : resultObj.country === "jp"
+            ? "manga"
+            : resultObj.country === "cn"
+            ? "manhua"
+            : "Unknown",
         contentRating: resultObj.content_rating,
         cover: {
           width: resultObj.md_covers[0].w,
@@ -88,7 +105,7 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ results });
     } catch (error) {
-      res.status(400).json({ message: "Error fetching search results" });
+      handleError(res, "Error fetching search results");
     }
   },
 
@@ -101,7 +118,7 @@ const comicKController: ComicKController = {
     try {
       while (true) {
         const url = `${config.baseUrl}/comic/${mangaID}/chapters?lang=en&page=${page}&tachiyomi=true`;
-        const { data } = await api.get(url);
+        const data = await fetchData(url);
         if (!data.chapters || data.chapters.length === 0) break;
 
         data.chapters.forEach((chapter: any) => {
@@ -112,7 +129,7 @@ const comicKController: ComicKController = {
           if (groupNameToAdd) groupNames.add(groupNameToAdd);
           chapters.push({
             chId: chapter.hid,
-            chNum: chapter.chap,
+            chNum: parseInt(chapter.chap),
             title: chapter.title,
             volume: chapter.vol,
             language: chapter.lang,
@@ -125,7 +142,7 @@ const comicKController: ComicKController = {
       }
       res.status(200).json({ chapters, groups: Array.from(groupNames) });
     } catch (error) {
-      res.status(400).json({ message: "Error fetching chapters" });
+      handleError(res, "Error fetching chapters");
     }
   },
 
@@ -133,12 +150,20 @@ const comicKController: ComicKController = {
     const { mangaID } = req.params;
     const url = `${config.baseUrl}/comic/${mangaID}?tachiyomi=true`;
     try {
-      const { data } = await api.get(url);
+      const data = await fetchData(url);
       const mangaDetails = {
         source: "comick",
         mangaID: data.comic.hid,
         slug: data.comic.slug,
         title: data.comic.title,
+        type:
+          data.comic.country === "kr"
+            ? "manhwa"
+            : data.comic.country === "jp"
+            ? "manga"
+            : data.comic.country === "cn"
+            ? "manhua"
+            : "Unknown",
         status: data.comic.status,
         lastChapter: data.comic.last_chapter,
         synopsis: data.comic.desc,
@@ -151,7 +176,7 @@ const comicKController: ComicKController = {
       };
       res.status(200).json(mangaDetails);
     } catch (error) {
-      res.status(400).json({ message: "Error fetching metadata" });
+      handleError(res, "Error fetching metadata");
     }
   },
 
@@ -159,15 +184,17 @@ const comicKController: ComicKController = {
     const { chapterID } = req.params;
     const url = `${config.baseUrl}/chapter/${chapterID}/get_images?tachiyomi=true`;
     try {
-      const { data } = await api.get(url);
+      const data = await fetchData(url);
       const pages = data.map((image: any) => ({
         pgNum: image.b2key.split("-")[0],
         url: `${config.imgDomain}/image/${image.b2key}`,
+        width: image.w,
+        height: image.h,
         size: image.s,
       }));
       res.status(200).json({ pages });
     } catch (error) {
-      res.status(500).json({ message: "Internal Server Error" });
+      handleError(res, "Internal Server Error", 500);
     }
   },
 };
