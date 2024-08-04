@@ -97,7 +97,7 @@ const comicKController: ComicKController = {
     try {
       res.status(200).json({ message: "API is up" });
     } catch (error) {
-      next(error);
+      next({ message: "Failed to get root endpoint", statusCode: 500, error });
     }
   },
 
@@ -124,7 +124,7 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ results });
     } catch (error) {
-      next(error);
+      next({ message: "Failed to fetch search results", statusCode: 500, error });
     }
   },
 
@@ -159,7 +159,7 @@ const comicKController: ComicKController = {
 
       res.status(200).json({ chapters, groups: Array.from(groupNames) });
     } catch (error) {
-      next(error);
+      next({ message: "Failed to fetch chapters", statusCode: 500, error });
     }
   },
 
@@ -185,7 +185,7 @@ const comicKController: ComicKController = {
       };
       res.status(200).json(mangaDetails);
     } catch (error) {
-      next(error);
+      next({ message: "Failed to fetch manga metadata", statusCode: 500, error });
     }
   },
   async getPages(req, res, next) {
@@ -202,7 +202,7 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ pages });
     } catch (error) {
-      next(error);
+      next({ message: "Failed to fetch pages", statusCode: 500, error });
     }
   },
 };
