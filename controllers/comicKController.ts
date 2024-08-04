@@ -1,6 +1,11 @@
 import axios from "axios";
 import { RequestHandler } from "express";
 import https from "https";
+import {
+  parseCountryType,
+  parseEscapedHtml,
+  parseTimestamp,
+} from "../utils/parser";
 
 interface ComicKController {
   getRoot: RequestHandler;
@@ -36,60 +41,9 @@ const api = axios.create({
   headers: { "User-Agent": "Android" },
 });
 
-const countryTypeMap: { [key: string]: string } = {
-  kr: "manhwa",
-  jp: "manga",
-  cn: "manhua",
-};
-
-const dateToHumanReadableForm = (timestamp: string): string => {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-};
-
 const fetchData = async (url: string) => {
   const { data } = await api.get(url);
   return data;
-};
-
-const decodeHtmlEntities = (htmlString: string): string => {
-  return htmlString
-    .replace(/&#(\d+);/g, (match, dec) => {
-      return String.fromCharCode(dec);
-    })
-    .replace(/&([a-zA-Z]+);/g, (match, entity) => {
-      const entities: { [key: string]: string } = {
-        amp: "&",
-        lt: "<",
-        gt: ">",
-        quot: '"',
-        apos: "'",
-        nbsp: " ",
-      };
-      return entities[entity] || match;
-    });
-};
-
-const stripHtmlTags = (htmlString: string): string => {
-  return htmlString
-    .replace(/<[^>]*>/g, "")
-    .replace(/\n+/g, " ")
-    .replace(/\\"/g, "")
-    .replace(/\\u003C/g, "<")
-    .replace(/\\u003E/g, ">")
-    .replace(
-      /Links:.*?AnimeNewsNetwork \(special\).*?AnimeNewsNetwork \(anime\)/g,
-      ""
-    );
-};
-
-const getRawTextFromHtml = (htmlString: string): string => {
-  const unescaped = decodeHtmlEntities(htmlString);
-  return stripHtmlTags(unescaped).trim();
 };
 
 const comicKController: ComicKController = {
@@ -114,7 +68,7 @@ const comicKController: ComicKController = {
         mangaID: resultObj.hid,
         slug: resultObj.slug,
         title: resultObj.title,
-        type: countryTypeMap[resultObj.country] || "Unknown",
+        type: parseCountryType(resultObj.country),
         contentRating: resultObj.content_rating,
         cover: {
           width: resultObj.md_covers[0].w,
@@ -124,7 +78,11 @@ const comicKController: ComicKController = {
       }));
       res.status(200).json({ results });
     } catch (error) {
-      next({ message: "Failed to fetch search results", statusCode: 500, error });
+      next({
+        message: "Failed to fetch search results",
+        statusCode: 500,
+        error,
+      });
     }
   },
 
@@ -150,7 +108,7 @@ const comicKController: ComicKController = {
             title: chapter.title,
             volume: chapter.vol,
             language: chapter.lang,
-            createdAt: dateToHumanReadableForm(chapter.created_at),
+            createdAt: parseTimestamp(chapter.created_at),
             isLastCh: chapter.is_the_last_chapter,
             groupName: groupNameToAdd,
           });
@@ -172,7 +130,7 @@ const comicKController: ComicKController = {
         mangaID: data.comic.hid,
         slug: data.comic.slug,
         title: data.comic.title,
-        type: countryTypeMap[data.comic.country] || "Unknown",
+        type: parseCountryType(data.comic.country),
         status:
           data.comic.status === 1
             ? "Ongoing"
@@ -180,12 +138,16 @@ const comicKController: ComicKController = {
             ? "Completed"
             : "Unknown",
         lastChapter: data.comic.last_chapter,
-        synopsis: getRawTextFromHtml(data.comic.parsed),
+        synopsis: parseEscapedHtml(data.comic.parsed),
         cover: data.comic.cover,
       };
       res.status(200).json(mangaDetails);
     } catch (error) {
-      next({ message: "Failed to fetch manga metadata", statusCode: 500, error });
+      next({
+        message: "Failed to fetch manga metadata",
+        statusCode: 500,
+        error,
+      });
     }
   },
   async getPages(req, res, next) {
