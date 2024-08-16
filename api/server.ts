@@ -28,7 +28,9 @@ const corsOptions: CorsOptions = {
   optionsSuccessStatus: 200,
 };
 
-// app.use(cors(corsOptions));
+// Uncomment to use CORS
+app.use(cors());
+
 app.use(express.json());
 app.use(errorHandler);
 

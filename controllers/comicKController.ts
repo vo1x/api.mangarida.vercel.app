@@ -139,7 +139,11 @@ const comicKController: ComicKController = {
             : "Unknown",
         lastChapter: data.comic.last_chapter,
         synopsis: parseEscapedHtml(data.comic.parsed),
-        cover: data.comic.cover,
+        cover: {
+          width: data.comic.md_covers[0].w,
+          height: data.comic.md_covers[0].h,
+          url: `${config.imgDomain}/image/${data.comic.md_covers[0].b2key}`,
+        },
       };
       res.status(200).json(mangaDetails);
     } catch (error) {
