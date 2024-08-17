@@ -60,7 +60,30 @@ const comicKController: ComicKController = {
     const url = `${config.baseUrl}/top`;
     try {
       const data = await fetchData(url);
-      const trendingResults = data.trending;
+      const trendingResults = {
+        weekly: data.trending["7"].map((trendingComic: any) => ({
+          title: trendingComic.title,
+          slug: trendingComic.slug,
+          contentRating: trendingComic.content_rating,
+          genres: trendingComic.genres,
+          cover: {
+            width: trendingComic.md_covers[0].w,
+            height: trendingComic.md_covers[0].h,
+            url: `${config.imgDomain}/image/${trendingComic.md_covers[0].b2key}`,
+          },
+        })),
+        monthly: data.trending["30"].map((trendingComic: any) => ({
+          title: trendingComic.title,
+          slug: trendingComic.slug,
+          contentRating: trendingComic.content_rating,
+          genres: trendingComic.genres,
+          cover: {
+            width: trendingComic.md_covers[0].w,
+            height: trendingComic.md_covers[0].h,
+            url: `${config.imgDomain}/image/${trendingComic.md_covers[0].b2key}`,
+          },
+        })),
+      };
 
       res.status(200).json({ trending: trendingResults });
     } catch (error: any) {
