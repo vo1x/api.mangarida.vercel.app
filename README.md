@@ -30,15 +30,16 @@ Mangarida API provides an easy/decluttered way for accessing/wrapping the `api.c
   GET /trending
 ```
 
-| Parameter | Type     | Description                | Required                |
-| :-------- | :------- | :------------------------- | :------------------------- |
-| `none` | `none` | Id of comic to fetch. | ✅                      |
 
 #### Get all chapters for a comic
 
 ```http
   GET /chapters/${mangaId}
 ```
+
+| Parameter | Type     | Description                | Required                |
+| :-------- | :------- | :------------------------- | :------------------------- |
+| `mangaId` | `string` | Id of comic to fetch chapters for. | ✅                      |
 
 #### Get pages for a chapter
 
