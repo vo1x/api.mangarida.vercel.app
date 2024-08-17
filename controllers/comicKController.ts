@@ -10,6 +10,7 @@ import {
 interface ComicKController {
   getRoot: RequestHandler;
   getSearch: RequestHandler;
+  getTrending: RequestHandler;
   getChapters: RequestHandler<{ mangaID: string }>;
   getMetadata: RequestHandler<{ mangaID: string }>;
   getPages: RequestHandler<{ chapterID: string }>;
@@ -52,6 +53,18 @@ const comicKController: ComicKController = {
       res.status(200).json({ message: "API is up" });
     } catch (error) {
       next({ message: "Failed to get root endpoint", statusCode: 500, error });
+    }
+  },
+
+  async getTrending(req, res, next) {
+    const url = `${config.baseUrl}/top`;
+    try {
+      const data = await fetchData(url);
+      const trendingResults = data.trending;
+
+      res.status(200).json({ trending: trendingResults });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
     }
   },
 
