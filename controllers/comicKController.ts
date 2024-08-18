@@ -83,6 +83,17 @@ const comicKController: ComicKController = {
             url: `${config.imgDomain}/image/${trendingComic.md_covers[0].b2key}`,
           },
         })),
+        quarterly: data.trending["90"].map((trendingComic: any) => ({
+          title: trendingComic.title,
+          slug: trendingComic.slug,
+          contentRating: trendingComic.content_rating,
+          genres: trendingComic.genres,
+          cover: {
+            width: trendingComic.md_covers[0].w,
+            height: trendingComic.md_covers[0].h,
+            url: `${config.imgDomain}/image/${trendingComic.md_covers[0].b2key}`,
+          },
+        })),
       };
 
       res.status(200).json({ trending: trendingResults });
